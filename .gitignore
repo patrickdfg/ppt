@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+sample-test.pptx
+test-output/
+node_modules/
+.playwright/

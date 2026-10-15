@@ -1,0 +1,31 @@
+const {chromium}=require('playwright');
+(async()=>{
+ const browser=await chromium.launch({headless:true,channel:"msedge"});
+ const page=await browser.newPage({viewport:{width:1280,height:1000}});
+ page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE',m.text().slice(0,1800))});
+ page.on('pageerror',e=>console.log('PAGEERROR',e.message));
+ await page.goto('http://127.0.0.1:8765');
+ await page.screenshot({path:'test-output/desktop.png',fullPage:true});
+ await page.locator('#manuscript').setInputFiles('test-output/sample.hwpx');
+ await page.waitForFunction(()=>!document.getElementById('editor').hidden||document.getElementById('status').classList.contains('error'),{timeout:180000});
+ console.log('STATUS',await page.locator('#status').innerText());
+ console.log('COUNTS',await page.locator('#counts').innerText());
+ if(!await page.locator('#editor').isVisible())throw new Error('Editor failed');
+ await page.locator('#date').fill('2026년 10월 18일 주일말씀');
+ await page.locator('#build').click();
+ await page.waitForFunction(()=>!document.getElementById('result').hidden||document.getElementById('status').classList.contains('error'),{timeout:180000});
+ console.log('BUILD',await page.locator('#status').innerText());
+ if(!await page.locator('#result').isVisible())throw new Error('Build failed');
+ const [download]=await Promise.all([page.waitForEvent('download'),page.locator('#download').click()]);
+ await download.saveAs('test-output/browser.pptx');
+ await page.locator('.template-settings summary').click();
+ await page.locator('#templateInput').setInputFiles({name:'저장시험.pptx',mimeType:'application/vnd.openxmlformats-officedocument.presentationml.presentation',buffer:require('fs').readFileSync('assets/template.pptx')});
+ await page.waitForFunction(()=>document.getElementById('templateName').textContent.includes('저장시험'),{timeout:180000});
+ await page.reload();
+ await page.waitForFunction(()=>document.getElementById('templateName').textContent.includes('저장시험'));
+ console.log('PERSIST',await page.locator('#templateName').innerText());
+ await page.setViewportSize({width:390,height:844});await page.screenshot({path:'test-output/mobile.png',fullPage:true});
+ console.log('OVERFLOW',await page.evaluate(()=>document.documentElement.scrollWidth>innerWidth));
+ await browser.close();
+})().catch(e=>{console.error(e);process.exitCode=1});
+

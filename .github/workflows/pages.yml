@@ -1,0 +1,43 @@
+name: 자막 사이트 배포
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+concurrency:
+  group: pages
+  cancel-in-progress: false
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m unittest discover -s tests -v
+  deploy:
+    needs: test
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/configure-pages@v5
+      - name: 공개할 사이트 파일만 모으기
+        run: |
+          mkdir -p _site/reference/scripts _site/vendor _site/assets
+          cp index.html style.css app.js worker.js engine.py favicon.svg _site/
+          cp reference/scripts/build.py _site/reference/scripts/
+          cp vendor/olefile.py vendor/LICENSE.txt _site/vendor/
+          cp assets/template.pptx _site/assets/
+          touch _site/.nojekyll
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+      - uses: actions/deploy-pages@v4
+        id: deployment

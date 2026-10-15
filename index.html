@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="theme-color" content="#243c35">
+  <meta name="description" content="한글 설교 원고의 색을 읽어 저장된 템플릿으로 파워포인트 자막을 만듭니다.">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'wasm-unsafe-eval' https://cdn.jsdelivr.net; worker-src 'self'; connect-src 'self' https://cdn.jsdelivr.net; img-src 'self' blob: data:; style-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <title>말씀 자막 · 한글에서 파워포인트로</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="header"><a class="brand" href="./"><span class="brand-mark" aria-hidden="true">字</span> 말씀 자막</a><span class="header-note">한글에서 파워포인트로</span></header>
+  <main>
+    <section class="intro">
+      <p class="eyebrow">매주 쓰는 자막, 익숙한 서식 그대로</p>
+      <h1>원고를 올리면,<br>말씀이 자막으로.</h1>
+      <p class="lead">원고의 파란 글씨와 녹색 글씨를 읽어<br class="desktop-break"> 저장된 템플릿으로 예배 자막을 만듭니다.</p>
+      <ol class="steps" aria-label="만드는 순서"><li><b>1</b> 원고 선택</li><li><b>2</b> 자막 확인</li><li><b>3</b> PPT 받기</li></ol>
+    </section>
+    <section class="workspace" aria-label="자막 만들기">
+      <div class="upload-area" id="dropZone">
+        <span class="file-symbol" aria-hidden="true">↥</span>
+        <h2>이번 주 원고를 선택해 주세요</h2>
+        <p>파일을 여기에 놓거나 아래 버튼을 눌러 주세요.</p>
+        <label class="button primary file-label">한글 파일 선택<input id="manuscript" type="file" accept=".hwp,.hwpx,.txt"></label>
+        <p class="small">HWP · HWPX · TXT / 최대 30MB</p>
+        <p class="privacy">원고는 서버에 올리지 않고, 이 기기에서만 처리합니다.</p>
+      </div>
+      <details class="template-settings">
+        <summary><span>저장된 템플릿</span><span id="templateName">기본 설교 자막 템플릿</span></summary>
+        <div class="template-content">
+          <p>기본 템플릿은 저장소에 보관되어 언제든 다시 쓸 수 있습니다. 변경한 템플릿은 이 브라우저에 저장됩니다.</p>
+          <p class="small">원본 자막 템플릿의 슬라이드 구조를 유지한 PPTX를 사용해 주세요. 다른 기기에서는 별도로 선택해야 합니다. 브라우저 데이터를 지우면 개인 템플릿도 지워집니다.</p>
+          <div class="template-actions"><label class="button file-label">템플릿 바꾸고 저장<input id="templateInput" type="file" accept=".pptx"></label><button id="resetTemplate" type="button">기본으로 되돌리기</button><a class="text-link" href="assets/template.pptx" download="설교_자막_기본템플릿.pptx">기본 템플릿 받기 ↗</a></div>
+        </div>
+      </details>
+      <div id="status" class="status" role="status" aria-live="polite" hidden></div>
+      <div id="warnings" class="warnings" role="note" hidden></div>
+      <section id="editor" hidden>
+        <div class="editor-heading"><div><p class="eyebrow">자막 확인</p><h2 id="fileName">원고</h2></div><span id="counts" class="count"></span></div>
+        <div class="meta-fields"><label>설교 제목<input id="title" placeholder="설교 제목"></label><label>날짜·예배명<input id="date" placeholder="2026년 10월 18일 주일말씀"></label></div>
+        <div class="editor-toolbar"><label class="check"><input type="checkbox" id="showSkipped"> 제외된 문단도 보기</label><button type="button" id="addEntry">+ 자막 추가</button></div>
+        <p class="small editor-help">색으로 분류한 초안입니다. 성구·화자와 줄바꿈을 확인해 주세요. 문단을 클릭하면 편집할 수 있습니다. 화면은 내용 확인용이며 실제 배경·글꼴은 PPT에 적용됩니다.</p>
+        <div id="entries"></div>
+        <div id="empty" class="empty" hidden>색으로 표시된 자막이 없습니다. ‘제외된 문단도 보기’를 켜고 필요한 문단의 종류를 바꿔 주세요.</div>
+        <div class="download-bar"><p><strong>확인한 자막을 파워포인트로</strong><span>원본 템플릿의 배경과 서식을 사용합니다.</span></p><button id="build" type="button" class="button primary">PPT 만들기 ↓</button></div>
+        <div id="result" class="result" hidden><div><strong>자막 PPT가 준비되었습니다.</strong><p id="resultDetail"></p></div><a id="download" class="button primary" download>파워포인트 받기 ↓</a></div>
+      </section>
+    </section>
+    <section class="guide" aria-label="원고 색상 안내"><h2>원고의 색이 자막의 종류가 됩니다</h2><div class="color-guide"><p><i class="dot blue"></i><strong>파란 글씨</strong><span>화면 아래에 들어가는 자막</span></p><p><i class="dot green"></i><strong>녹색 글씨</strong><span>전체 화면 말씀·성경 구절</span></p><p><i class="dot red"></i><strong>빨간 글씨</strong><span>자막 안의 강조 색 유지</span></p></div><p class="small">검정 글씨는 기본으로 제외합니다. 자동 분류가 맞지 않으면 직접 바꿀 수 있습니다. 원고의 사진·도표는 별도 안내하며 자동 삽입하지 않습니다.</p></section>
+  </main>
+  <footer><span>말씀 자막</span><p>처음 사용할 때는 도구를 내려받느라 조금 기다릴 수 있습니다.<br>완성된 PPT는 발표 전 파워포인트에서 한 번 확인해 주세요.</p></footer>
+</body>
+</html>
