@@ -4,7 +4,7 @@ const {chromium}=require('playwright');
  const page=await browser.newPage({viewport:{width:1280,height:1000}});
  page.on('console',m=>{if(m.type()==='error')console.log('CONSOLE',m.text().slice(0,1800))});
  page.on('pageerror',e=>console.log('PAGEERROR',e.message));
- await page.goto('http://127.0.0.1:8765');
+ await page.goto(process.env.TEST_URL || 'http://127.0.0.1:8765');
  await page.screenshot({path:'test-output/desktop.png',fullPage:true});
  await page.locator('#manuscript').setInputFiles('test-output/sample.hwpx');
  await page.waitForFunction(()=>!document.getElementById('editor').hidden||document.getElementById('status').classList.contains('error'),{timeout:180000});

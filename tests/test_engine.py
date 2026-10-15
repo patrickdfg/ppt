@@ -89,6 +89,11 @@ class EngineTests(unittest.TestCase):
             self.assertEqual(count, 11)
             pres = ET.fromstring(z.read('ppt/presentation.xml'))
             self.assertEqual(len(pres.find(f'{{{engine.P}}}sldIdLst')), count)
+            cover = ET.fromstring(z.read('ppt/slides/slide1001.xml'))
+            a = 'http://schemas.openxmlformats.org/drawingml/2006/main'
+            for transform in cover.iter(f'{{{a}}}xfrm'):
+                for child in transform:
+                    self.assertFalse((child.tail or '').strip())
             self.assertNotIn('ppt/slides/slide1.xml', names)
             self.assertFalse(any('notesSlides' in name for name in names))
             all_text = ''.join(z.read(n).decode() for n in names if n.startswith('ppt/slides/') and n.endswith('.xml'))

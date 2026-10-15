@@ -375,6 +375,17 @@ def build_ppt(state, template_data):
             rel_string = ET.tostring(new_rels, encoding='unicode').replace('ns0:', '').replace(':ns0', '')
             (slide_dir / '_rels' / (dest.name + '.rels')).write_text(rel_string, encoding='utf-8')
             template.set_slide_text(dest, entry['type'], entry, styles)
+            if entry['type'] == 'cover':
+                # The original date box fits a one-digit month only in fallback fonts.
+                # Keep its center, font and background; allow a standard full date on one line.
+                slide_xml = dest.read_text(encoding='utf-8')
+                date_shape = next(sp for sp in template.get_sp_blocks(slide_xml) if '<p:ph type="title"' not in sp)
+                geometry = re.search(r'<a:off x="(-?\d+)" y="(-?\d+)"/><a:ext cx="(\d+)" cy="(\d+)"/>', date_shape)
+                if geometry:
+                    x, y, width, height = map(int, geometry.groups())
+                    new_width = int(width * 1.65)
+                    changed = date_shape.replace(geometry.group(), f'<a:off x="{x - (new_width - width) // 2}" y="{y}"/><a:ext cx="{new_width}" cy="{height}"/>')
+                    dest.write_text(slide_xml.replace(date_shape, changed), encoding='utf-8')
             if entry.get('speaker'):
                 template.apply_speaker_layout(root, dest, entry['speaker'])
             rid = f'rId{rid_max + i}'
